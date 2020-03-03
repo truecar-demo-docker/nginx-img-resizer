@@ -5,8 +5,23 @@ keys_zone=nginx_cache:100M max_size=1G inactive=40d;
 
 # resizing server
 server {
-    listen 80;
-    server_name image_resize_server;
+    listen 8080;
+    server_name _;
+
+    location / {
+        return 502;
+    }
+
+    location /nginx_status {
+        access_log off;
+        stub_status on;
+    }
+
+    location /internal/health {
+        access_log off;
+        return 200;
+    }
+
     location ~ "^(/listings/.+\.jpg)[?][w]=([1-9][0-9]{1,3})[&]h=([1-9][0-9]{1,3})" {
         error_page 415 =404 /empty.gif;
         image_filter_buffer 2M;
@@ -19,10 +34,9 @@ server {
 # back-end virtual host for retrieving file from AWS
 server {
     listen 10178;
-    server_name second_proxy_server;
-    resolver 8.8.8.8;  # Use Google for DNS.
+    server_name _;
     resolver_timeout 2s;
-    set $backend 's3.{{ .Env.AWS_DEFAULT_REGION }}.amazonaws.com/{{ .Env.BUCKET_NAME }}'; # We assume the bucket is in the same region
+    set $backend '{{ .Env.BUCKET_NAME }}.s3-{{ .Env.BUCKET_REGION }}.amazonaws.com';
     proxy_buffering off;
     proxy_http_version 1.1;
     proxy_pass_request_body off;  # Not needed by AWS.
@@ -37,8 +51,7 @@ server {
     proxy_send_timeout      30;
     proxy_read_timeout      30;
     location ~ ^/listings/(.+) {
-        rewrite ^ $uri?; # remove query parameters so S3 don't see it
-
+        set $args ""; # Drop query params toward s3
         proxy_pass http://$backend/$uri;
         error_page 415 =404 /empty.gif;
         proxy_cache nginx_cache;
