@@ -1,7 +1,7 @@
 #!/bin/sh
 
-if [ -z ${BUCKET_NAME} ]; then
-  echo "Error: Missing required vars (Usage: BUCKET_NAME=... $0)" >&2
+if [ -z ${BACKEND_HOST} ]; then
+  echo "Error: Missing required vars (Usage: BACKEND_HOST=... $0)" >&2
   exit 1
 fi
 

@@ -4,7 +4,7 @@ proxy_cache_path /tmp/nginx_cache levels=1:2
 keys_zone=nginx_cache:100M max_size=1G inactive=40d;
 
 upstream s3bucket {
-    server {{ .Env.BUCKET_NAME }}.s3-{{ default .Env.BUCKET_REGION .Env.AWS_DEFAULT_REGION }}.amazonaws.com:443;
+    server {{ default .Env.BACKEND_HOST "no_such_bucket.s3-us-west-2.amazonaws.com" }}:443;
     keepalive 10;
     keepalive_requests 100;
 }
@@ -17,7 +17,7 @@ upstream s3cache {
 
 # resizing server
 server {
-    listen {{ default .Env.LISTEN_PORT "8080" }};
+    listen {{ default .Env.SERVER_PORT "8080" }};
     server_name _;
 
     location / {
@@ -86,7 +86,7 @@ server {
         # Use the upstream with https
         proxy_pass https://s3bucket;
         # Need to pass hostname for SNI
-        proxy_set_header Host {{ .Env.BUCKET_NAME }}.s3-{{ default .Env.BUCKET_REGION .Env.AWS_DEFAULT_REGION }}.amazonaws.com;
+        proxy_set_header Host {{ default .Env.BACKEND_HOST "no_such_bucket.s3-us-west-2.amazonaws.com" }};
         # Clear connection so keepalive works
         proxy_set_header Connection "";
         # Set content-type correctly
