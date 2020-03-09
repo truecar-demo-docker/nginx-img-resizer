@@ -1,0 +1,11 @@
+---
+services:
+  nginx-img-resizer:
+    build:
+      context: .
+    environment:
+      PRIVATE_DOMAIN: dev.pod.tc
+      PUBLIC_DOMAIN: dev.true.sh
+    ports:
+    - 8080:80
+version: '2.1'

@@ -1,0 +1,15 @@
+---
+steps:
+  - label: ':docker: Build and Push'
+    plugins:
+    - https://git.corp.tc/buildkite-plugins/buildnumbers-buildkite-plugin#master:
+        identifier: ${BUILDKITE_PIPELINE_SLUG}
+    - ecr#v2.0.0:
+        login: true
+    - docker-compose#v3.2.0:
+        push: ${BUILDKITE_PIPELINE_SLUG}:221344006312.dkr.ecr.us-west-2.amazonaws.com/${BUILDKITE_PIPELINE_SLUG}:${BUILDKITE_BUILD_NUMBER}
+    - https://git.corp.tc/infra/spacepods-buildkite-plugin.git#v6:
+        component_name: ${BUILDKITE_PIPELINE_SLUG}
+    env:
+      IMAGE_TAG: ${BUILDKITE_BUILD_NUMBER}
+      SPACEPODS_API_TOKEN: ssm-parameter:/build/common/spacepods-api-token
