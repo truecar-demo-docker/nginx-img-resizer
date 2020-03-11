@@ -4,8 +4,6 @@ steps:
     plugins:
     - https://git.corp.tc/buildkite-plugins/buildnumbers-buildkite-plugin#master:
         identifier: ${BUILDKITE_PIPELINE_SLUG}
-    - ecr#v2.0.0:
-        login: true
     - docker-compose#v3.2.0:
         push: ${BUILDKITE_PIPELINE_SLUG}:221344006312.dkr.ecr.us-west-2.amazonaws.com/${BUILDKITE_PIPELINE_SLUG}:${BUILDKITE_BUILD_NUMBER}
     - https://git.corp.tc/infra/spacepods-buildkite-plugin.git#v6:
