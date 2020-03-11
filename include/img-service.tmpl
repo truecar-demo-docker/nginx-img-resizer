@@ -21,17 +21,32 @@ server {
     server_name _;
 
     location / {
-        return 502;
+        access_log off;
+        add_header Content-Type text/plain;
+        return 404 "Not found";
     }
 
     location /nginx_status {
         access_log off;
+        add_header Content-Type text/plain;
         stub_status on;
     }
 
     location /internal/health {
         access_log off;
+        add_header Content-Type text/plain;
         return 200;
+    }
+
+    location @my404handler {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 404 "Not found";
+    }
+
+    location @my415handler {
+        add_header Content-Type text/plain;
+        return 415 "Invalid image or parameters";
     }
 
     location /listings/ {
@@ -44,13 +59,15 @@ server {
         if ($height = "") {
           set $height "-";
         }
-        error_page 415 =404 "not found";
         image_filter_buffer 2M;
         image_filter_jpeg_quality {{ default .Env.JPG_QUALITY "85" }}; # Desired JPG quality
         image_filter crop $width $height;
         # Clear connection so keepalive works
         proxy_set_header Connection "";
+        proxy_intercept_errors on;
         proxy_pass http://s3cache;
+        error_page 301 302 403 404 =404 @my404handler;
+        error_page 415 = @my415handler;
     }
 }
 
@@ -77,7 +94,9 @@ server {
     proxy_read_timeout      30;
 
     location / {
-        return 502;
+        access_log off;
+        add_header Content-Type text/plain;
+        return 404 "Not found";
     }
 
     location /listings/ {
@@ -91,7 +110,6 @@ server {
         proxy_set_header Connection "";
         # Set content-type correctly
         add_header Content-Type "image/jpg";
-        error_page 415 =404 /empty.gif;
         proxy_cache nginx_cache;
         proxy_cache_key "temp_$proxy_host$uri";
         proxy_cache_valid 30d;
