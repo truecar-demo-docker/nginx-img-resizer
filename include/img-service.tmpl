@@ -50,10 +50,10 @@ server {
     }
 
     location {{ default .Env.URL_PREFIX "~ ^/"}} {
-        # Set default jpg quality
-        set $jpgqual {{ default .Env.JPG_QUALITY "85" }};
-        if ($arg_q = "") {
-          set $jpgqual $arg_q;
+        # Set jpg quality, but if empty use env. var.
+        set $jpgqual $arg_q;
+        if ($jpgqual = "") {
+          set $jpgqual {{ default .Env.JPG_QUALITY "85" }};
         }
         # Set width and height, but if empty return "-"
         set $width $arg_w;
