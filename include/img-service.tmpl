@@ -50,6 +50,11 @@ server {
     }
 
     location /listings/ {
+        # Set default jpg quality
+        set $jpgqual {{ default .Env.JPG_QUALITY "85" }};
+        if ($arg_q = "") {
+          set $jpgqual $arg_q;
+        }
         # Set width and height, but if empty return "-"
         set $width $arg_w;
         set $height $arg_h;
@@ -59,8 +64,8 @@ server {
         if ($height = "") {
           set $height "-";
         }
-        image_filter_buffer 2M;
-        image_filter_jpeg_quality {{ default .Env.JPG_QUALITY "85" }}; # Desired JPG quality
+        image_filter_buffer 10M;
+        image_filter_jpeg_quality $jpgqual;
         image_filter crop $width $height;
         # Clear connection so keepalive works
         proxy_set_header Connection "";
