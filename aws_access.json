@@ -1,0 +1,15 @@
+{
+  "common": {
+    "resources": [
+      {
+        "actions": [
+          "s3:GetObject"
+        ],
+        "arns": [
+          "arn:aws:s3:::tc-images-dev/*",
+          "arn:aws:s3:::tc-listings-prod/*"
+        ]
+      }
+    ]
+  }
+}
