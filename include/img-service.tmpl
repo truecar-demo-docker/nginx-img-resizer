@@ -20,6 +20,12 @@ server {
     listen {{ default .Env.SERVER_PORT "8080" }};
     server_name _;
 
+    add_header Strict-Transport-Security "max-age=31536000; includeSubdomains; preload";
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header Cache-Control "public";
+    expires max;
+
     location / {
         access_log off;
         add_header Content-Type text/plain;
@@ -35,7 +41,7 @@ server {
     location /internal/health {
         access_log off;
         add_header Content-Type text/plain;
-        return 200;
+        return 200 "IMOK";
     }
 
     location @my404handler {
@@ -49,7 +55,7 @@ server {
         return 415 "Invalid image or parameters";
     }
 
-    location {{ default .Env.URL_PREFIX "~ ^/"}} {
+    location @my420handler {
         # Set jpg quality, but if empty use env. var.
         set $jpgqual $arg_q;
         if ($jpgqual = "") {
@@ -73,6 +79,21 @@ server {
         proxy_pass http://s3cache;
         error_page 301 302 403 404 =404 @my404handler;
         error_page 415 = @my415handler;
+    }
+
+    location {{ default .Env.URL_PREFIX "~ ^/"}} {
+        set $testvar "$arg_w$arg_h";
+        if ($testvar != "") {
+            # If options are specified, do image resizing
+            return 420;
+        }
+        # Else serve directly from s3cache
+        # Clear connection so keepalive works
+        proxy_set_header Connection "";
+        proxy_intercept_errors on;
+        proxy_pass http://s3cache;
+        error_page 301 302 403 404 =404 @my404handler;
+        error_page 420 =200 @my420handler;
     }
 }
 
@@ -111,7 +132,6 @@ server {
         add_header Content-Type "image/jpg";
         proxy_cache nginx_cache;
         proxy_cache_key "temp_$proxy_host$uri";
-        proxy_cache_valid 30d;
-        expires 100d;
+        proxy_cache_valid 1d;
     }
 }
