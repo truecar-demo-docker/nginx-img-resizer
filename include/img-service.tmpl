@@ -108,6 +108,8 @@ server {
     proxy_pass_request_body off;
     proxy_pass_request_headers off;
     # Clean up the headers going to and from S3.
+    proxy_hide_header "x-amz-replication-status";
+    proxy_hide_header "x-amz-version-id";
     proxy_hide_header "x-amz-id-2";
     proxy_hide_header "x-amz-request-id";
     proxy_hide_header "x-amz-storage-class";
