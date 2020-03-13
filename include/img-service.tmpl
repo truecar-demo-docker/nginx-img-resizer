@@ -28,30 +28,25 @@ server {
 
     location / {
         access_log off;
-        add_header Content-Type text/plain;
         return 404 "Not found";
     }
 
     location /nginx_status {
         access_log off;
-        add_header Content-Type text/plain;
         stub_status on;
     }
 
     location /internal/health {
         access_log off;
-        add_header Content-Type text/plain;
         return 200 "IMOK";
     }
 
     location @my404handler {
         access_log off;
-        add_header Content-Type text/plain;
         return 404 "Not found";
     }
 
     location @my415handler {
-        add_header Content-Type text/plain;
         return 415 "Invalid image or parameters";
     }
 
