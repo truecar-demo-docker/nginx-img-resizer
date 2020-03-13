@@ -41,6 +41,12 @@ server {
         return 200 "IMOK";
     }
 
+    location @my304handler {
+        # Aggressive caching for the win!
+        access_log off;
+        return 304 "Not Modified";
+    }
+
     location @my404handler {
         access_log off;
         return 404 "Not found";
@@ -77,6 +83,11 @@ server {
     }
 
     location {{ default .Env.URL_PREFIX "~ ^/"}} {
+        set $testcache "$http_if_none_match-$http_if_modified_since";
+        if ($testcache != "-") {
+            # Just assume it's cached if they ask
+            return 304;
+        }
         set $testvar "$arg_w$arg_h";
         if ($testvar != "") {
             # If options are specified, do image resizing
@@ -88,6 +99,7 @@ server {
         proxy_intercept_errors on;
         proxy_pass http://s3cache;
         error_page 301 302 403 404 =404 @my404handler;
+        error_page 304 = @my304handler;
         error_page 420 =200 @my420handler;
     }
 }
